@@ -113,6 +113,14 @@ namespace Nancy
         /// <value><c>true</c> if allow file stream upload async; otherwise, <c>false</c>.</value>
         public static bool AllowFileStreamUploadAsync { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether or not to disable the discovery of the X-HTTP-Method-Override flag in a request body.
+        /// This can be in the headers or posted form body of a request.  This flag will disable the discovery of this 
+        /// flag in the body of a request to avoid buffering the request body.
+        /// </summary>
+        [Description("Gets or sets a value indicating whether or not to disable the discovery of the X-HTTP-Method-Override flag in a request body.")]
+        public static bool DisableXHttpMethodOverrideBodyDiscovery { get; set; }
+
         public static class Caching
         {
             private static bool? enableRuntimeViewDiscovery;
