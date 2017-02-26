@@ -220,7 +220,8 @@
                 GetAssemblyPath(modelType)
             };
 
-            assemblies.AddRange(AppDomainAssemblyTypeScanner.Assemblies.Select(GetAssemblyPath));
+            // this seems just wrong. why would we want to add references to hundreds of assemblies?
+            //assemblies.AddRange(AppDomainAssemblyTypeScanner.Assemblies.Select(GetAssemblyPath));
 
             if (referencingAssembly != null)
             {

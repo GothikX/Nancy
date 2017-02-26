@@ -6,16 +6,48 @@ namespace Nancy
     using Diagnostics;
     using Nancy.Bootstrapper;
 
+    public interface IDebugModeProvider
+    {
+        bool IsDebugMode();
+    }
+
+    // we'll not even bother instantiating this
+    public class DefaultDebugModeProvider : IDebugModeProvider
+    {
+        public bool IsDebugMode()
+        {
+            try
+            {
+                //Get all non-nancy assemblies, and select the custom attributes
+                var assembliesInDebug
+                    = AppDomainAssemblyTypeScanner.TypesOf<INancyModule>(ScanMode.ExcludeNancy)
+                                                  .Select(x => x.Assembly.GetCustomAttributes(typeof(DebuggableAttribute), true))
+                                                  .Where(x => x.Length != 0);
+
+                //if there are any, then return the IsJITTrackingEnabled
+                //else if the collection is empty it returns false
+                return assembliesInDebug.Any(d => ((DebuggableAttribute)d[0]).IsJITTrackingEnabled);
+            }
+            catch (Exception)
+            {
+                // Evil catch all - don't want to blow up trying to detect debug mode!
+                return false;
+            }
+        }
+    }
+
     public static class StaticConfiguration
     {
-        private static bool? isRunningDebug;
-        private static bool? disableCaches;
 
         private static bool? disableErrorTraces;
 
+        /// <summary>
+        /// The default method of checking debug mode uses ADATS so we're forced to resort to silly things like this.
+        /// </summary>
+        public static IDebugModeProvider DebugModeProvider { get; set; }
+
         static StaticConfiguration()
         {
-            disableErrorTraces = !(disableCaches = IsRunningDebug);
             CaseSensitive = false;
             RequestQueryFormMultipartLimit = 1000;
             AllowFileStreamUploadAsync = true;
@@ -29,7 +61,7 @@ namespace Nancy
         {
             get
             {
-                return disableErrorTraces ?? (bool)(disableErrorTraces = IsRunningDebug);
+                return disableErrorTraces ?? (bool)(disableErrorTraces = !IsRunningDebug);
             }
             set
             {
@@ -62,10 +94,7 @@ namespace Nancy
         /// </summary>
         public static bool IsRunningDebug
         {
-            get
-            {
-                return isRunningDebug ?? (bool)(isRunningDebug = GetDebugMode());
-            }
+            get { return DebugModeProvider == null ? false : DebugModeProvider.IsDebugMode(); }
         }
 
         /// <summary>
@@ -73,28 +102,7 @@ namespace Nancy
         /// or multipart sections in a request.
         /// </summary>
         public static int RequestQueryFormMultipartLimit { get; set; }
-
-        private static bool GetDebugMode()
-        {
-            try
-            {
-                //Get all non-nancy assemblies, and select the custom attributes
-                var assembliesInDebug
-                    = AppDomainAssemblyTypeScanner.TypesOf<INancyModule>(ScanMode.ExcludeNancy)
-                                                  .Select(x => x.Assembly.GetCustomAttributes(typeof(DebuggableAttribute), true))
-                                                  .Where(x => x.Length != 0);
-
-                //if there are any, then return the IsJITTrackingEnabled
-                //else if the collection is empty it returns false
-                return assembliesInDebug.Any(d => ((DebuggableAttribute)d[0]).IsJITTrackingEnabled);
-            }
-            catch (Exception)
-            {
-                // Evil catch all - don't want to blow up trying to detect debug mode!
-                return false;
-            }
-        }
-
+        
         /// <summary>
         /// Gets or sets a value indicating whether or not to enable request tracing
         /// </summary>

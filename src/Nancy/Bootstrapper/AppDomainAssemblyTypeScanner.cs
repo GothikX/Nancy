@@ -15,6 +15,7 @@ namespace Nancy.Bootstrapper
     {
         static AppDomainAssemblyTypeScanner()
         {
+            throw new Exception("Yes, this is how much I dislike AppDomainAssemblyTypeScanner. Usage denied.");
             LoadAssembliesWithNancyReferences();
         }
 

@@ -39,7 +39,7 @@
         /// <summary>
         /// Default Nancy conventions
         /// </summary>
-        private readonly NancyConventions conventions;
+        private NancyConventions conventions;
 
         /// <summary>
         /// Internal configuration
@@ -69,7 +69,16 @@
         protected NancyBootstrapperBase()
         {
             this.ApplicationPipelines = new Pipelines();
-            this.conventions = new NancyConventions();
+            
+        }
+
+        /// <summary>
+        /// Initializes the conventions; this is REQUIRED if you want this build to behave like the default Nancy.
+        /// However you can provide your own conventions to avoid assembly scanning.
+        /// </summary>
+        protected void InitConventions(IEnumerable<IConvention> cvs = null)
+        {
+            this.conventions = cvs == null ? new NancyConventions() : new NancyConventions(cvs);
         }
 
         /// <summary>
@@ -244,8 +253,8 @@
 
             this.ConfigureApplicationContainer(this.ApplicationContainer);
 
-            // We need to call this to fix an issue with assemblies that are referenced by DI not being loaded
-            AppDomainAssemblyTypeScanner.UpdateTypes();
+            // I don't want to depend on ADATS at all...
+            //AppDomainAssemblyTypeScanner.UpdateTypes();
 
             var typeRegistrations = this.InternalConfiguration.GetTypeRegistations()
                                         .Concat(this.GetAdditionalTypes());

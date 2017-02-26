@@ -28,6 +28,20 @@
         }
 
         /// <summary>
+        /// Initializes a new instance of the NancyConventions class using the supplied conventions, 
+        /// without scanning for any more conventions, for crap's sake.
+        /// </summary>
+        public NancyConventions(IEnumerable<IConvention> conventions)
+        {
+            this.conventions = conventions;
+
+            foreach (var convention in this.conventions)
+            {
+                convention.Initialise(this);
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the conventions for locating view templates
         /// </summary>
         public IList<Func<string, dynamic, ViewLocationContext, string>> ViewLocationConventions { get; set; }
